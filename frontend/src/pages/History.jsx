@@ -145,6 +145,9 @@ function History({ user }) {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
+                  Distance (km)
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
                   Date
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-600">
@@ -203,6 +206,11 @@ function History({ user }) {
                       >
                         {duration}
                       </span>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-600">
+                      {checkin.distance_from_client != null
+                        ? `${checkin.distance_from_client} km`
+                        : "-"}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600">
                       {checkin.notes || "-"}

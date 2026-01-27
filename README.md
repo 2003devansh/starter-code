@@ -33,8 +33,8 @@ Frontend runs on: `http://localhost:5173`
 
 ### Test Credentials
 
-| Role     | Email              | Password    |
-|----------|-------------------|-------------|
+| Role     | Email             | Password    |
+| -------- | ----------------- | ----------- |
 | Manager  | manager@unolo.com | password123 |
 | Employee | rahul@unolo.com   | password123 |
 | Employee | priya@unolo.com   | password123 |
@@ -60,10 +60,12 @@ Frontend runs on: `http://localhost:5173`
 ## API Endpoints
 
 ### Authentication
+
 - `POST /api/auth/login` - Login
 - `GET /api/auth/me` - Get current user
 
 ### Check-ins
+
 - `GET /api/checkin/clients` - Get assigned clients
 - `POST /api/checkin` - Create check-in
 - `PUT /api/checkin/checkout` - Checkout
@@ -71,8 +73,13 @@ Frontend runs on: `http://localhost:5173`
 - `GET /api/checkin/active` - Get active check-in
 
 ### Dashboard
+
 - `GET /api/dashboard/stats` - Manager stats
 - `GET /api/dashboard/employee` - Employee stats
+
+### Reports (Manager Only)
+
+- `GET /api/reports/daily-summary` – Daily team activity summary
 
 ## Notes
 

@@ -1,6 +1,7 @@
 const express = require("express");
 const pool = require("../config/database");
 const { authenticateToken } = require("../middleware/auth");
+const { calculateDistance } = require("../utils/distance");
 
 const router = express.Router();
 
@@ -27,13 +28,8 @@ router.get("/clients", authenticateToken, async (req, res) => {
 router.post("/", authenticateToken, async (req, res) => {
   try {
     const { client_id, latitude, longitude, notes } = req.body;
-
-    if (!client_id) {
-      return res.status(400).json({
-        success: false,
-        message: "Client ID is required",
-      });
-    }
+    console.log("AUTH_USER_ID", req.user.id);
+    console.log("CLIENT_ID", client_id);
 
     if (latitude == null || longitude == null) {
       return res.status(400).json({
@@ -43,12 +39,13 @@ router.post("/", authenticateToken, async (req, res) => {
     }
 
     if (!client_id) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Client ID is required" });
+      return res.status(400).json({
+        success: false,
+        message: "Client ID is required",
+      });
     }
 
-    // Check if employee is assigned to this client
+    // Check assignment
     const [assignments] = await pool.execute(
       "SELECT * FROM employee_clients WHERE employee_id = ? AND client_id = ?",
       [req.user.id, client_id],
@@ -61,9 +58,9 @@ router.post("/", authenticateToken, async (req, res) => {
       });
     }
 
-    // Check for existing active check-in
+    // Check active check-in
     const [activeCheckins] = await pool.execute(
-      'SELECT * FROM checkins WHERE employee_id = ? AND status = "checked_in"',
+      "SELECT * FROM checkins WHERE employee_id = ? AND status = 'checked_in'",
       [req.user.id],
     );
 
@@ -74,22 +71,63 @@ router.post("/", authenticateToken, async (req, res) => {
       });
     }
 
+    // ✅ FETCH CLIENT LOCATION (missing before)
+    const [clients] = await pool.execute(
+      "SELECT latitude, longitude FROM clients WHERE id = ?",
+      [client_id],
+    );
+
+    if (clients.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Client not found",
+      });
+    }
+
+    const client = clients[0];
+
+    console.log("CLIENT", client.latitude, client.longitude);
+
+    // ✅ CALCULATE DISTANCE
+    const distance = calculateDistance(
+      Number(latitude),
+      Number(longitude),
+      Number(client.latitude),
+      Number(client.longitude),
+    );
+
+    console.log("distanceInLog", distance);
+
+    // ✅ INSERT WITH DISTANCE
     const [result] = await pool.execute(
-      `INSERT INTO checkins (employee_id, client_id, lat, lng, notes, status)
-             VALUES (?, ?, ?, ?, ?, 'checked_in')`,
-      [req.user.id, client_id, latitude, longitude, notes || null],
+      `
+  INSERT INTO checkins
+  (employee_id, client_id, latitude, longitude, distance_from_client, notes, status)
+  VALUES (?, ?, ?, ?, ?, ?, 'checked_in')
+  `,
+      [
+        req.user.id,
+        client_id,
+        Number(latitude),
+        Number(longitude),
+        distance,
+        notes || null,
+      ],
     );
 
     res.status(201).json({
       success: true,
       data: {
         id: result.insertId,
-        message: "Checked in successfully",
+        distance_from_client: distance,
       },
     });
   } catch (error) {
     console.error("Check-in error:", error);
-    res.status(500).json({ success: false, message: "Check-in failed" });
+    res.status(500).json({
+      success: false,
+      message: "Check-in failed",
+    });
   }
 });
 
@@ -108,14 +146,16 @@ router.put("/checkout", authenticateToken, async (req, res) => {
     }
 
     await pool.execute(
-      'UPDATE checkins SET checkout_time = NOW(), status = "checked_out" WHERE id = ?',
+      `UPDATE checkins 
+   SET checkout_time = datetime('now'), status = 'checked_out' 
+   WHERE id = ?`,
       [activeCheckins[0].id],
     );
 
     res.json({ success: true, message: "Checked out successfully" });
   } catch (error) {
     console.error("Checkout error:", error);
-    res.status(500).json({ success: false, message: "Checkout failed" });
+    res.status(500).json({ success: false, message: "Checkout failed onsv" });
   }
 });
 

@@ -3,7 +3,7 @@ import api from "../utils/api";
 
 function CheckIn({ user }) {
   const [clients, setClients] = useState([]);
-
+  const [distance, setDistance] = useState(null);
   const [selectedClient, setSelectedClient] = useState("");
   const [notes, setNotes] = useState("");
   const [location, setLocation] = useState(null);
@@ -57,28 +57,23 @@ function CheckIn({ user }) {
   };
 
   const handleCheckIn = async (e) => {
+    e.preventDefault();
     setError("");
     setSuccess("");
     setSubmitting(true);
 
     try {
-      if (
-        !location ||
-        location.latitude == null ||
-        location.longitude == null
-      ) {
-        setError("Location is required to check in");
-        return;
-      }
-      const response = await api.post("/checkin", {
-        client_id: selectedClient,
+      const response = await api.post("checkin/", {
+        client_id: Number(selectedClient),
         latitude: location?.latitude,
         longitude: location?.longitude,
         notes: notes,
       });
+      console.log("RESPONSE", response);
 
       if (response.data.success) {
         setSuccess("Checked in successfully!");
+        setDistance(response.data.data.distance_from_client);
         setSelectedClient("");
         setNotes("");
         fetchData(); // Refresh data
@@ -96,6 +91,7 @@ function CheckIn({ user }) {
     setError("");
     setSuccess("");
     setSubmitting(true);
+    setDistance(null);
 
     try {
       const response = await api.put("/checkin/checkout");
@@ -107,7 +103,7 @@ function CheckIn({ user }) {
         setError(response.data.message);
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Checkout failed");
+      setError(err.response?.data?.message || "Checkout failed on web");
     } finally {
       setSubmitting(false);
     }
@@ -149,6 +145,20 @@ function CheckIn({ user }) {
           <p className="text-gray-500">Getting location...</p>
         )}
       </div>
+
+      {distance !== null && (
+        <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-4 mb-6">
+          <p className="text-sm text-yellow-800">
+            Distance from client: <strong>{distance} km</strong>
+          </p>
+
+          {distance > 0.5 && (
+            <p className="text-red-600 font-medium mt-1">
+              You are far from the client location
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Active Check-in Card */}
       {activeCheckin && (

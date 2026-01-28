@@ -94,8 +94,11 @@ SELECT COUNT(*) AS total_checkins
 FROM checkins
 WHERE employee_id = ?
 AND checkin_time >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+```
 
+**New Logic**
 
+```sql
 SELECT COUNT(*) AS total_checkins,
 COUNT(DISTINCT client_id) AS unique_clients
 FROM checkins

@@ -28,8 +28,6 @@ router.get("/clients", authenticateToken, async (req, res) => {
 router.post("/", authenticateToken, async (req, res) => {
   try {
     const { client_id, latitude, longitude, notes } = req.body;
-    console.log("AUTH_USER_ID", req.user.id);
-    console.log("CLIENT_ID", client_id);
 
     if (latitude == null || longitude == null) {
       return res.status(400).json({
@@ -86,8 +84,6 @@ router.post("/", authenticateToken, async (req, res) => {
 
     const client = clients[0];
 
-    console.log("CLIENT", client.latitude, client.longitude);
-
     // ✅ CALCULATE DISTANCE
     const distance = calculateDistance(
       Number(latitude),
@@ -95,8 +91,6 @@ router.post("/", authenticateToken, async (req, res) => {
       Number(client.latitude),
       Number(client.longitude),
     );
-
-    console.log("distanceInLog", distance);
 
     // ✅ INSERT WITH DISTANCE
     const [result] = await pool.execute(

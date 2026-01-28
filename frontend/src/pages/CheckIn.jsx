@@ -69,7 +69,6 @@ function CheckIn({ user }) {
         longitude: location?.longitude,
         notes: notes,
       });
-      console.log("RESPONSE", response);
 
       if (response.data.success) {
         setSuccess("Checked in successfully!");

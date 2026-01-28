@@ -65,7 +65,6 @@ router.get("/employee", authenticateToken, async (req, res) => {
              ORDER BY ch.checkin_time DESC`,
       [req.user.id, today],
     );
-    console.log("wertyui", todayCheckins);
 
     // Get assigned clients
     const [clients] = await pool.execute(
@@ -74,7 +73,6 @@ router.get("/employee", authenticateToken, async (req, res) => {
              WHERE ec.employee_id = ?`,
       [req.user.id],
     );
-    console.log("CLIENTS_ON_BACKEND", clients);
 
     // Get this week's stats
     const [weekStats] = await pool.execute(
